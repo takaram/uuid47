@@ -3,7 +3,11 @@ declare(strict_types=1);
 
 namespace Takaram\Uuid47;
 
+use DateTimeInterface;
+use Ramsey\Uuid\FeatureSet;
 use Ramsey\Uuid\Generator\RandomGeneratorInterface;
+use Ramsey\Uuid\Generator\TimeGeneratorInterface;
+use Ramsey\Uuid\Generator\UnixTimeGenerator;
 use Ramsey\Uuid\UuidFactory;
 use Ramsey\Uuid\UuidInterface;
 use function assert;
@@ -46,6 +50,46 @@ final class Uuid47
         });
 
         return $uuidFactory->uuid4();
+    }
+
+    public static function decode(UuidInterface $v4, string $key): UuidInterface
+    {
+        $uuidBytes = $v4->getBytes();
+
+        // 1) rebuild same Sip input from façade (identical bytes)
+        $sipMsg = self::buildSipInputFromV7($uuidBytes);
+        $mask48 = substr(self::sipHash24($key, $sipMsg), 2, 6);
+
+        // 2) ts = encTS ^ mask
+        $encTs = substr($uuidBytes, 0, 6);
+        $ts48 = $encTs ^ $mask48;
+
+        // 3) restore v7: write ts, set ver=7, set variant
+        $uuidWithoutVerVariant = $ts48 . substr($uuidBytes, 6, 10);
+
+        // Use UuidFactory from ramsey/uuid to set version and variant bits
+        $uuidFactory = new UuidFactory(new class($uuidWithoutVerVariant) extends FeatureSet {
+            public function __construct(private readonly string $bytes)
+            {
+                parent::__construct();
+            }
+
+            public function getUnixTimeGenerator(): TimeGeneratorInterface
+            {
+                return new class($this->bytes) extends UnixTimeGenerator {
+                    public function __construct(private readonly string $bytes)
+                    {
+                    }
+
+                    public function generate($node = null, ?int $clockSeq = null, ?DateTimeInterface $dateTime = null): string
+                    {
+                        return $this->bytes;
+                    }
+                };
+            }
+        });
+
+        return $uuidFactory->uuid7();
     }
 
     private static function buildSipInputFromV7(string $bytes): string
