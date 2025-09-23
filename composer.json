@@ -1,0 +1,26 @@
+{
+    "name": "takaram/uuid47",
+    "description": "PHP implementation of UUIDv47",
+    "type": "library",
+    "require": {
+        "php": "^8.2",
+        "ext-sodium": "*",
+        "ramsey/uuid": "^4.5"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.1",
+        "phpunit/phpunit": "^12.3"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Takaram\\Uuid47\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Takuya Aramaki",
+            "email": "takaram71@gmail.com"
+        }
+    ]
+}
