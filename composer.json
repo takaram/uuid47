@@ -17,6 +17,11 @@
             "Takaram\\Uuid47\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Takaram\\Uuid47\\Tests\\": "tests/"
+        }
+    },
     "authors": [
         {
             "name": "Takuya Aramaki",
