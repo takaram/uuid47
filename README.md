@@ -1,0 +1,60 @@
+# UUIDv47 for PHP
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PHP Version](https://img.shields.io/packagist/php-v/takaram/uuid47.svg)](https://packagist.org/packages/takaram/uuid47)
+
+This is a PHP implementation of [UUIDv47](https://uuidv47.stateless.me/).
+
+UUIDv47 allows you to encode a UUIDv7 into a UUIDv4 and back again.
+Store UUIDv7 in a database, which is timestamp-based and sortable, while showing it to users as a random-looking UUIDv4.
+
+## Installation
+
+Install the package with Composer:
+
+```bash
+composer require takaram/uuid47
+```
+
+## Usage
+
+Here is a simple example of how to use this library:
+
+```php
+<?php
+declare(strict_types=1);
+
+use Ramsey\Uuid\Uuid;
+use Takaram\Uuid47\Uuid47;
+
+require __DIR__ . '/vendor/autoload.php';
+
+// Example: parse a v7 from DB, emit façade, then decode back.
+$key = hex2bin('0123456789abcdeffedcba9876543210');
+
+// Example v7 string (any valid v7 will do):
+$uuid = Uuid::fromString('018f2d9f-9a2a-7def-8c3f-7b1a2c4d5e6f');
+$facade = Uuid47::encode($uuid, $key);
+$back = Uuid47::decode($facade, $key);
+
+echo "v7 in : $uuid\n";
+echo "v4 out: $facade\n";
+echo "back  : $back\n";
+```
+
+## Testing
+
+To run the tests, you will need to have PHPUnit installed as a dev dependency:
+
+```bash
+composer install --dev
+./vendor/bin/phpunit
+```
+
+## Original Implementation
+
+This project is a port of the original C implementation of UUIDv47, which can be found at https://github.com/stateless-me/uuidv47.
+
+## License
+
+MIT License - see the [LICENSE](./LICENSE) file for details.
