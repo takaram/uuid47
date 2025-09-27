@@ -3,10 +3,12 @@ declare(strict_types=1);
 
 namespace Takaram\Uuid47;
 
+use InvalidArgumentException;
 use Ramsey\Uuid\UuidFactory;
 use Ramsey\Uuid\UuidInterface;
 use function chr;
 use function sodium_crypto_shorthash;
+use function strlen;
 use function strrev;
 use function substr;
 
@@ -14,6 +16,8 @@ final class Uuid47
 {
     public static function encode(UuidInterface $v7, string $key): UuidInterface
     {
+        self::validateKeyLength($key);
+
         $uuidBytes = $v7->getBytes();
 
         // 1) mask = SipHash24(key, v7.random74bits) -> take low 48 bits
@@ -34,6 +38,8 @@ final class Uuid47
 
     public static function decode(UuidInterface $v4, string $key): UuidInterface
     {
+        self::validateKeyLength($key);
+
         $uuidBytes = $v4->getBytes();
 
         // 1) rebuild same Sip input from façade (identical bytes)
@@ -63,6 +69,7 @@ final class Uuid47
 
     private static function sipHash24(string $key, string $message): string
     {
+        // convert to little-endian
         $k0 = strrev(substr($key, 0, 8));
         $k1 = strrev(substr($key, 8, 8));
         $key = $k0 . $k1;
@@ -79,5 +86,12 @@ final class Uuid47
         // Set variant (RFC 4122)
         $bytes[8] = ($bytes[8] & "\x3F") | "\x80";
         return $bytes;
+    }
+
+    private static function validateKeyLength(string $key): void
+    {
+        if (strlen($key) !== 16) {
+            throw new InvalidArgumentException('Key must be 16 bytes long');
+        }
     }
 }
