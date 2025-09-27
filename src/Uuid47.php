@@ -6,7 +6,6 @@ namespace Takaram\Uuid47;
 use Ramsey\Uuid\UuidFactory;
 use Ramsey\Uuid\UuidInterface;
 use function chr;
-use function ord;
 use function sodium_crypto_shorthash;
 use function strrev;
 use function substr;
@@ -55,9 +54,9 @@ final class Uuid47
 
     private static function buildSipInputFromV7(string $bytes): string
     {
-        $msg = chr(ord($bytes[6]) & 0x0F);
+        $msg = $bytes[6] & "\x0F";
         $msg .= $bytes[7];
-        $msg .= chr(ord($bytes[8]) & 0x3F);
+        $msg .= $bytes[8] & "\x3F";
         $msg .= substr($bytes, 9, 7);
         return $msg;
     }
