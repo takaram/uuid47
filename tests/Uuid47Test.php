@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Takaram\Uuid47\Tests;
 
+use InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use Ramsey\Uuid\Uuid;
 use Takaram\Uuid47\Uuid47;
@@ -43,4 +44,19 @@ class Uuid47Test extends TestCase
         self::assertTrue($v7->equals($decodedV7), "$v7 and $decodedV7 should be equal");
     }
 
+    public function testEncodeWithInvalidKeyLength(): void
+    {
+        $v7 = Uuid::uuid7();
+
+        $this->expectException(InvalidArgumentException::class);
+        Uuid47::encode($v7, 'short key');
+    }
+
+    public function testDecodeWithInvalidKeyLength(): void
+    {
+        $v4 = Uuid::uuid4();
+
+        $this->expectException(InvalidArgumentException::class);
+        Uuid47::decode($v4, 'short key');
+    }
 }
