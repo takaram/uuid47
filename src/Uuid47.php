@@ -3,18 +3,11 @@ declare(strict_types=1);
 
 namespace Takaram\Uuid47;
 
-use DateTimeInterface;
-use Ramsey\Uuid\FeatureSet;
-use Ramsey\Uuid\Generator\RandomGeneratorInterface;
-use Ramsey\Uuid\Generator\TimeGeneratorInterface;
-use Ramsey\Uuid\Generator\UnixTimeGenerator;
 use Ramsey\Uuid\UuidFactory;
 use Ramsey\Uuid\UuidInterface;
-use function assert;
 use function chr;
 use function ord;
 use function sodium_crypto_shorthash;
-use function strlen;
 use function strrev;
 use function substr;
 
@@ -34,22 +27,10 @@ final class Uuid47
 
         // 3) build v4 facade: write encTS, set ver=4, keep rand bytes identical, set variant
         $uuidWithoutVerVariant = $encTs . substr($uuidBytes, 6, 10);
+        $newUuidBytes = self::setVersionAndVariant($uuidWithoutVerVariant, 4);
 
-        // Use UuidFactory from ramsey/uuid to set version and variant bits
         $uuidFactory = new UuidFactory();
-        $uuidFactory->setRandomGenerator(new class($uuidWithoutVerVariant) implements RandomGeneratorInterface {
-            public function __construct(private readonly string $bytes)
-            {
-            }
-
-            public function generate(int $length): string
-            {
-                assert(strlen($this->bytes) === $length);
-                return $this->bytes;
-            }
-        });
-
-        return $uuidFactory->uuid4();
+        return $uuidFactory->uuid($newUuidBytes);
     }
 
     public static function decode(UuidInterface $v4, string $key): UuidInterface
@@ -66,30 +47,10 @@ final class Uuid47
 
         // 3) restore v7: write ts, set ver=7, set variant
         $uuidWithoutVerVariant = $ts48 . substr($uuidBytes, 6, 10);
+        $newUuidBytes = self::setVersionAndVariant($uuidWithoutVerVariant, 7);
 
-        // Use UuidFactory from ramsey/uuid to set version and variant bits
-        $uuidFactory = new UuidFactory(new class($uuidWithoutVerVariant) extends FeatureSet {
-            public function __construct(private readonly string $bytes)
-            {
-                parent::__construct();
-            }
-
-            public function getUnixTimeGenerator(): TimeGeneratorInterface
-            {
-                return new class($this->bytes) extends UnixTimeGenerator {
-                    public function __construct(private readonly string $bytes)
-                    {
-                    }
-
-                    public function generate($node = null, ?int $clockSeq = null, ?DateTimeInterface $dateTime = null): string
-                    {
-                        return $this->bytes;
-                    }
-                };
-            }
-        });
-
-        return $uuidFactory->uuid7();
+        $uuidFactory = new UuidFactory();
+        return $uuidFactory->uuid($newUuidBytes);
     }
 
     private static function buildSipInputFromV7(string $bytes): string
@@ -110,5 +71,14 @@ final class Uuid47
 
         // little-endian to big-endian
         return strrev($hash);
+    }
+
+    private static function setVersionAndVariant(string $bytes, int $version): string
+    {
+        // Set version
+        $bytes[6] = ($bytes[6] & "\x0F") | chr($version << 4);
+        // Set variant (RFC 4122)
+        $bytes[8] = ($bytes[8] & "\x3F") | "\x80";
+        return $bytes;
     }
 }
