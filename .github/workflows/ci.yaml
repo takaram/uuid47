@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    strategy:
+      matrix:
+        php: ['8.2', '8.3', '8.4', '8.5']
+        dependency: ['highest']
+        include:
+          - php: '8.2'
+            dependency: 'lowest'
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: sodium
+          coverage: none
+      - name: Install dependencies
+        uses: ramsey/composer-install@v3
+        with:
+          dependency-versions: ${{ matrix.dependency }}
+      - name: Run tests
+        run: vendor/bin/phpunit --colors=always
+
+  phpstan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+      - name: Install dependencies
+        uses: ramsey/composer-install@v3
+      - name: Run PHPStan
+        run: vendor/bin/phpstan analyse --no-progress --ansi --memory-limit=1G
