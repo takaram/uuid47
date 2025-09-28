@@ -7,18 +7,20 @@ use InvalidArgumentException;
 use Ramsey\Uuid\UuidFactory;
 use Ramsey\Uuid\UuidInterface;
 use function chr;
-use function sodium_crypto_shorthash;
 use function strlen;
-use function strrev;
 use function substr;
 
 class Codec
 {
-    public function __construct(private readonly string $key)
+    private SipHash24 $sipHash24;
+
+    public function __construct(string $key)
     {
         if (strlen($key) !== 16) {
             throw new InvalidArgumentException('Key must be 16 bytes long');
         }
+
+        $this->sipHash24 = new SipHash24($key);
     }
 
     /**
@@ -36,7 +38,7 @@ class Codec
 
         // 1) mask = SipHash24(key, v7.random74bits) -> take low 48 bits
         $sipMsg = $this->buildSipInputFromV7($uuidBytes);
-        $mask48 = substr($this->sipHash24($this->key, $sipMsg), 2, 6);
+        $mask48 = substr($this->sipHash24->hash($sipMsg), 2, 6);
 
         // 2) encTS = ts ^ mask
         $ts48 = substr($uuidBytes, 0, 6);
@@ -64,7 +66,7 @@ class Codec
 
         // 1) rebuild same Sip input from façade (identical bytes)
         $sipMsg = $this->buildSipInputFromV7($uuidBytes);
-        $mask48 = substr($this->sipHash24($this->key, $sipMsg), 2, 6);
+        $mask48 = substr($this->sipHash24->hash($sipMsg), 2, 6);
 
         // 2) ts = encTS ^ mask
         $encTs = substr($uuidBytes, 0, 6);
@@ -85,18 +87,6 @@ class Codec
         $msg .= $bytes[8] & "\x3F";
         $msg .= substr($bytes, 9, 7);
         return $msg;
-    }
-
-    private function sipHash24(string $key, string $message): string
-    {
-        // convert to little-endian
-        $k0 = strrev(substr($key, 0, 8));
-        $k1 = strrev(substr($key, 8, 8));
-        $key = $k0 . $k1;
-        $hash = sodium_crypto_shorthash($message, $key);
-
-        // little-endian to big-endian
-        return strrev($hash);
     }
 
     private function setVersionAndVariant(string $bytes, int $version): string
