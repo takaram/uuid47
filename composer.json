@@ -11,7 +11,7 @@
         "phpstan/extension-installer": "^1.4",
         "phpstan/phpstan": "^2.1",
         "phpstan/phpstan-phpunit": "^2.0",
-        "phpunit/phpunit": "^12.3"
+        "phpunit/phpunit": "^11.5|^12.3"
     },
     "license": "MIT",
     "autoload": {
