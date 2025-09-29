@@ -42,6 +42,29 @@ echo "v4 out: $facade\n";
 echo "back  : $back\n";
 ```
 
+Alternatively, you can use `Takaram\Uuid47\Codec` class:
+
+```php
+<?php
+declare(strict_types=1);
+
+use Ramsey\Uuid\Uuid;
+use Takaram\Uuid47\Codec;
+
+require __DIR__ . '/vendor/autoload.php';
+
+$key = hex2bin('0123456789abcdeffedcba9876543210');
+$codec = new Codec($key);
+
+$uuid = Uuid::fromString('018f2d9f-9a2a-7def-8c3f-7b1a2c4d5e6f');
+$facade = $codec->encode($uuid, $key);
+$back = $codec->decode($facade, $key);
+
+echo "v7 in : $uuid\n";
+echo "v4 out: $facade\n";
+echo "back  : $back\n";
+```
+
 ## Testing
 
 To run the tests, you will need to have PHPUnit installed as a dev dependency:
