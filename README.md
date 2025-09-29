@@ -1,7 +1,9 @@
 # UUIDv47 for PHP
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![PHP Version](https://img.shields.io/packagist/php-v/takaram/uuid47.svg)](https://packagist.org/packages/takaram/uuid47)
+[![Packagist Version](https://img.shields.io/packagist/v/takaram/uuid47)](https://packagist.org/packages/takaram/uuid47)
+[![Packagist Downloads](https://img.shields.io/packagist/dt/takaram/uuid47)](https://packagist.org/packages/takaram/uuid47/stats)
+[![CI](https://img.shields.io/github/check-runs/takaram/uuid47/main)](https://github.com/takaram/uuid47/actions/workflows/ci.yaml)
+[![License: MIT](https://img.shields.io/packagist/l/takaram/uuid47)](https://opensource.org/licenses/MIT)
 
 This is a PHP implementation of [UUIDv47](https://uuidv47.stateless.me/).
 
